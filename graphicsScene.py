@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import (QApplication, QGraphicsView, QGraphicsScene, QGraph
                              QGraphicsBlurEffect, QGraphicsOpacityEffect, QGraphicsDropShadowEffect,
                              QGraphicsColorizeEffect)
 from PyQt5.QtCore import Qt, QRectF, QPointF
-from PyQt5.QtGui import QPixmap, QFont, QColor
+from PyQt5.QtGui import QPixmap, QFont, QColor, QMatrix4x4
 
 class Example(QGraphicsView):
 
@@ -23,14 +23,10 @@ class Example(QGraphicsView):
         self.font = QFont("PT Sans", 16)
         self.font.setBold(True)
 
-        #self.scene.addPixmap(self.pixmap.scaled(300, 200))
         self.text = self.scene.addText("Praise to the Lord\nThe Almighty\nThe King of Creation", self.font)
         self.text.setDefaultTextColor(QColor(255, 255, 255))
         self.text.setFlags(QGraphicsItem.ItemIsSelectable |
                            QGraphicsItem.ItemIsMovable)
-        #self.text.setTextInteractionFlags(Qt.TextEditable)
-        self.bkgOriginX = None
-        self.bkgOriginY = None
 
         self.setScene(self.scene)
 
@@ -69,45 +65,23 @@ class Example(QGraphicsView):
                 self.text.setGraphicsEffect(None)
 
     def drawBackground(self, qp, rect):
-        #if not self.backgroundRect:
-        #    self.backgroundRect.append(rect.toRect())
-        ##print(self.sceneRect(), end = ' ')
-        ##print(self.pixmap.rect())
-        #print(qp.device().width(), qp.device().height())
 
-        #target = rect
-        #offset = QPointF(self.pixmap.width() / 2.0, self.pixmap.height() / 2.0)
-        ##offset = QPointF(502, 242)
-        #print(offset)
-        #source = QRectF(rect.topLeft() + offset, rect.size())
-        #qp.drawPixmap(target, self.pixmap, source)
-        #qp.drawPixmap(0, 0, self.width(), self.height(), self.pixmap, 0, 0, self.pixmap.width(), self.pixmap.height())
+        # The rectangle is in "Scene coordinates".  mapFromScene converts to viewport coordinates
+        # Not sure how scene coordinates and self.sceneRect() relate.
+        # The QGraphicsView source code shows the how the rectangle is computed and passed in.
+        viewRect = QRectF(self.mapFromScene(rect).boundingRect())
 
-        #The only one that "works."  I don't know why.
-        #print(rect, end = ' ')
-        #print(rect.toRect()) # This is the same scale as window geometry. Viewport coordinates? But not same x, y
-        #print(self.sceneRect(), end = ' ')
-        #print(self.sceneRect().toRect()) # This is *not* in normalized device coordinates
-        #print(self.pos().x(), self.pos().y(), self.width(), self.height())
-        #qp.drawPixmap(rect.toRect(), self.pixmap)
+        # Need to scale the rectangle from viewport coordinates to pixmap coordinates
+        # This is matrix algebra.
+        scaleMatrix = QMatrix4x4()
+        scaleMatrix.scale(float(self.pixmap.width())/self.viewport().width(),
+                          float(self.pixmap.height())/self.viewport().height())
+        pixmapRect = scaleMatrix.mapRect(viewRect)
 
-        #qp.drawPixmap(0, 0, self.scene.width(), self.scene.height(), self.pixmap, 0, 0, self.pixmap.width(), self.pixmap.height())
-        #qp.drawPixmap(self.scene.sceneRect().toRect(), self.pixmap)
-        #qp.drawPixmap(self.backgroundRect[0], self.pixmap)
-
-       # #Run once.
-       # if not self.bkgOriginX:
-       #     self.bkgOriginX = int(rect.topLeft().x())
-       #     self.bkgOriginY = int(rect.topLeft().y())
-
-        # Update origin of coordinates
-        if ((int(rect.width()) == qp.device().width()) and \
-           (int(rect.height()) == qp.device().height())) or \
-           not self.bkgOriginX:
-            self.bkgOriginX = int(rect.topLeft().x())
-            self.bkgOriginY = int(rect.topLeft().y())
-
-        qp.drawPixmap(self.bkgOriginX, self.bkgOriginY, qp.device().width(), qp.device().height(), self.pixmap)
+        # Now we have the target drawing buffer (rect in scene coordinates)
+        # as well as the source drawing buffer (rect in pixmap coordinates).
+        # We are sampling correctly from both.
+        qp.drawPixmap(rect, self.pixmap, pixmapRect)
 
 
 
