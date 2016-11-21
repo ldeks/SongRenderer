@@ -27,12 +27,17 @@ class Example(QGraphicsView):
         self.text.setDefaultTextColor(QColor(255, 255, 255))
         self.text.setFlags(QGraphicsItem.ItemIsSelectable |
                            QGraphicsItem.ItemIsMovable)
+        self.adjustText()
 
         self.setScene(self.scene)
 
         self.setGeometry(300, 300, 300, 200)
         self.setWindowTitle('Graphics View')
         self.show()
+
+    def resizeEvent(self, e):
+        super(Example, self).resizeEvent(e)
+        self.adjustText()
 
     def keyPressEvent(self, e):
 
@@ -83,6 +88,13 @@ class Example(QGraphicsView):
         # We are sampling correctly from both.
         qp.drawPixmap(rect, self.pixmap, pixmapRect)
 
+    def adjustText(self):
+
+        fontRatio = float(self.viewport().width())/(self.text.boundingRect().width())
+        scaleFactor = 0.75
+        fontSize = self.text.font().pointSize() * scaleFactor * fontRatio
+        self.font.setPointSizeF(fontSize)
+        self.text.setFont(self.font)
 
 
 if __name__ == '__main__':
