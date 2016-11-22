@@ -27,7 +27,6 @@ class Example(QGraphicsView):
         self.text.setDefaultTextColor(QColor(255, 255, 255))
         self.text.setFlags(QGraphicsItem.ItemIsSelectable |
                            QGraphicsItem.ItemIsMovable)
-        self.adjustText()
 
         self.setScene(self.scene)
 
@@ -36,7 +35,6 @@ class Example(QGraphicsView):
         self.show()
 
     def resizeEvent(self, e):
-        super(Example, self).resizeEvent(e)
         self.adjustText()
 
     def keyPressEvent(self, e):
@@ -91,7 +89,7 @@ class Example(QGraphicsView):
     def adjustText(self):
 
         fontRatio = float(self.viewport().width())/(self.text.boundingRect().width())
-        scaleFactor = 0.75
+        scaleFactor = 0.65
         fontSize = self.text.font().pointSize() * scaleFactor * fontRatio
         self.font.setPointSizeF(fontSize)
         self.text.setFont(self.font)
