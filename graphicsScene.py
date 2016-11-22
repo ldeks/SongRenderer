@@ -22,6 +22,10 @@ class Example(QGraphicsView):
         self.pixmap = QPixmap("geo5.jpg")
         self.font = QFont("PT Sans", 16)
         self.font.setBold(True)
+        self.shadowSize = 5
+        self.shadowRatio = self.shadowSize/float(16)
+        self.shadowOffset = 2
+        self.shadowOffsetRatio = self.shadowOffset/float(16)
 
         self.text = self.scene.addText("Praise to the Lord\nThe Almighty\nThe King of Creation", self.font)
         self.text.setDefaultTextColor(QColor(255, 255, 255))
@@ -47,13 +51,15 @@ class Example(QGraphicsView):
 
         elif e.key() == Qt.Key_B:
 
-            self.text.setGraphicsEffect(QGraphicsBlurEffect())
+            shadow = QGraphicsBlurEffect()
+            shadow.setBlurRadius(self.shadowSize)
+            self.text.setGraphicsEffect(shadow)
 
         elif e.key() == Qt.Key_S:
 
             shadow = QGraphicsDropShadowEffect()
-            shadow.setOffset(2)
-            shadow.setBlurRadius(5)
+            shadow.setBlurRadius(self.shadowSize)
+            shadow.setOffset(self.shadowOffset)
             self.text.setGraphicsEffect(shadow)
 
         elif e.key() == Qt.Key_C:
@@ -92,7 +98,18 @@ class Example(QGraphicsView):
         scaleFactor = 0.65
         fontSize = self.text.font().pointSize() * scaleFactor * fontRatio
         self.font.setPointSizeF(fontSize)
+        self.shadowSize = int(fontSize * self.shadowRatio)
+        self.shadowOffset = int(scaleFactor * fontSize * self.shadowOffsetRatio)
         self.text.setFont(self.font)
+
+        # Must do duck typing here because the object takes ownership
+        # of its graphics effect object and deletes it when it's changed.
+        try:
+            self.text.graphicsEffect().setBlurRadius(self.shadowSize)
+            self.text.graphicsEffect().setOffset(self.shadowOffset)
+            self.text.graphicsEffect().update()
+        except(AttributeError, TypeError):
+            pass
 
 
 if __name__ == '__main__':
