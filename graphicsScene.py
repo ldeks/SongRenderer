@@ -40,6 +40,8 @@ class Example(QGraphicsView):
 
     def resizeEvent(self, e):
         self.adjustText()
+        self.scene.setSceneRect(QRectF(self.viewport().rect()))
+        self.centerText()
 
     def keyPressEvent(self, e):
 
@@ -110,6 +112,27 @@ class Example(QGraphicsView):
             self.text.graphicsEffect().update()
         except(AttributeError, TypeError):
             pass
+
+    def centerText(self):
+
+        # The center of the text block
+        rect = self.text.boundingRect()
+        rectCenter = QPointF(rect.width()/2, rect.height()/2)
+
+        # The center of the window
+        windowWidth = self.viewport().width()
+        windowHeight = self.viewport().height()
+        centerPos = QPointF(float(windowWidth)/2, float(windowHeight)/2)
+
+        # The desired new location
+        topLeftPos = centerPos - QPointF(rect.width()/2, rect.height()/2)
+
+        # Any position of the text relative to the scene
+        rectS = self.text.mapRectToScene(rect)
+
+        # Move the text to the center position
+        self.text.moveBy(topLeftPos.x()-rectS.x(), topLeftPos.y()-rectS.y())
+
 
 
 if __name__ == '__main__':
