@@ -27,7 +27,12 @@ class Example(QGraphicsView):
         self.shadowOffset = 2
         self.shadowOffsetRatio = self.shadowOffset/float(16)
 
-        self.text = self.scene.addText("Praise to the Lord\nThe Almighty\nThe King of Creation", self.font)
+        self.currentSlide = 0
+        if self.readSong('praise-to-the-lord'):
+            self.unrollSong()
+            self.text = self.scene.addText(self.slides[0], self.font)
+        else:
+            self.text = self.scene.addText("Praise to the Lord\nThe Almighty\nThe King of Creation", self.font)
         self.text.setDefaultTextColor(QColor(255, 255, 255))
         self.text.setFlags(QGraphicsItem.ItemIsSelectable |
                            QGraphicsItem.ItemIsMovable)
@@ -39,6 +44,7 @@ class Example(QGraphicsView):
         self.show()
 
     def resizeEvent(self, e):
+
         self.adjustText()
         self.scene.setSceneRect(QRectF(self.viewport().rect()))
         self.centerText()
@@ -50,6 +56,13 @@ class Example(QGraphicsView):
 
         elif e.key() == Qt.Key_Down:
             self.rotate(-30)
+
+        elif e.key() == Qt.Key_Right:
+            self.currentSlide += 1
+            if self.currentSlide < len(self.slides):
+                self.text.setPlainText(self.slides[self.currentSlide])
+                self.adjustText()
+                self.centerText()
 
         elif e.key() == Qt.Key_B:
 
@@ -133,6 +146,53 @@ class Example(QGraphicsView):
         # Move the text to the center position
         self.text.moveBy(topLeftPos.x()-rectS.x(), topLeftPos.y()-rectS.y())
 
+    def readSong(self, filename):
+
+        try:
+            with open(filename, 'r') as f:
+                song = {}
+                verseOrder = []
+                slide = []
+                label = ''
+                for line in f:
+                    if '---[' in line:
+                        start = len('---[')
+                        end = line.find(']---')
+                        label = line[start:end]
+                        label = label.replace(':', ' ')
+                        if label not in song:
+                            song[label] = []
+                            verseOrder.append(label)
+                        if slide:
+                            #Flush slide
+                            slideStr = ('').join(slide)
+                            #Get rid of that last newline
+                            slideStr = slideStr.rstrip('\n')
+                            song[label].append(slideStr)
+                            slide = []
+                    else:
+                        slide.append(line)
+
+                #Flush last slide
+                slideStr = ('').join(slide)
+                #Get rid of that last newline
+                slideStr = slideStr.rstrip('\n')
+                song[label].append(slideStr)
+
+                self.song = song
+                self.verseOrder = verseOrder
+                return True
+        except(FileNotFoundError):
+            print('%s not found' % filename)
+            return False
+
+
+    def unrollSong(self):
+
+        self.slides = []
+        for label in self.verseOrder:
+            for item in self.song[label]:
+                self.slides.append(item)
 
 
 if __name__ == '__main__':
