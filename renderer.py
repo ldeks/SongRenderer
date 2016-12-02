@@ -114,6 +114,7 @@ class TextView(QGraphicsView):
         self.text.setDefaultTextColor(QColor(255, 255, 255))
         self.text.setFlags(QGraphicsItem.ItemIsSelectable |
                            QGraphicsItem.ItemIsMovable)
+        self.text.setTextInteractionFlags(Qt.TextEditorInteraction)
 
         bylineFont = QFont("PT Sans", 11)
         self.byline = self.scene.addText("Author: %s\nCopyright: %s" % (self.author, self.copyright), bylineFont)
@@ -130,24 +131,27 @@ class TextView(QGraphicsView):
 
     def keyPressEvent(self, e):
 
+        if not self.text.hasFocus():
 
-        if e.key() == Qt.Key_Right:
-            self.currentSlide += 1
-            if self.currentSlide >= len(self.slides):
-                #Loop to beginning
-                self.currentSlide = 0
-            self.text.setPlainText(self.slides[self.currentSlide])
-            self.adjustText()
-            self.centerText()
+            if e.key() == Qt.Key_Right:
+                self.currentSlide += 1
+                if self.currentSlide >= len(self.slides):
+                    #Loop to beginning
+                    self.currentSlide = 0
+                self.text.setPlainText(self.slides[self.currentSlide])
+                self.adjustText()
+                self.centerText()
 
-        elif e.key() == Qt.Key_Left:
-            self.currentSlide -= 1
-            if self.currentSlide < 0:
-                #Loop to end
-                self.currentSlide = len(self.slides) - 1
-            self.text.setPlainText(self.slides[self.currentSlide])
-            self.adjustText()
-            self.centerText()
+            elif e.key() == Qt.Key_Left:
+                self.currentSlide -= 1
+                if self.currentSlide < 0:
+                    #Loop to end
+                    self.currentSlide = len(self.slides) - 1
+                self.text.setPlainText(self.slides[self.currentSlide])
+                self.adjustText()
+                self.centerText()
+
+        super().keyPressEvent(e)
 
 
     def blur(self):
