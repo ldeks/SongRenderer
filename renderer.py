@@ -96,6 +96,8 @@ class TextView(QGraphicsView):
         self.scene = QGraphicsScene()
         self.pixmap = QPixmap("geo5.jpg")
         self.font = QFont("PT Sans", 16)
+        self.basicFontSize = 16 # The font size before window scaling.
+        self.fontRatio = 0.85/500.0 # The scaling ratio for the font.
         self.font.setBold(True)
         self.shadowSize = 5
         self.shadowRatio = self.shadowSize/float(16)
@@ -111,6 +113,7 @@ class TextView(QGraphicsView):
         self.text.setDefaultTextColor(QColor(255, 255, 255))
         self.text.setFlags(QGraphicsItem.ItemIsSelectable |
                            QGraphicsItem.ItemIsMovable)
+
 
         self.setScene(self.scene)
 
@@ -208,12 +211,11 @@ class TextView(QGraphicsView):
 
     def adjustText(self):
 
-        fontRatio = float(self.viewport().width())/(self.text.boundingRect().width())
-        scaleFactor = 0.65
-        fontSize = self.text.font().pointSize() * scaleFactor * fontRatio
+        fontSize = self.basicFontSize * self.fontRatio * self.viewport().width()
+        print(fontSize)
         self.font.setPointSizeF(fontSize)
         self.shadowSize = int(fontSize * self.shadowRatio)
-        self.shadowOffset = int(scaleFactor * fontSize * self.shadowOffsetRatio)
+        self.shadowOffset = int(self.fontRatio * fontSize * self.shadowOffsetRatio)
         self.text.setFont(self.font)
 
         # Must do duck typing here because the object takes ownership
