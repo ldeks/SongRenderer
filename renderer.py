@@ -115,6 +115,9 @@ class TextView(QGraphicsView):
         self.text.setFlags(QGraphicsItem.ItemIsSelectable |
                            QGraphicsItem.ItemIsMovable)
 
+        bylineFont = QFont("PT Sans", 11)
+        self.byline = self.scene.addText("Author: %s\nCopyright: %s" % (self.author, self.copyright), bylineFont)
+        self.byline.setDefaultTextColor(QColor(255, 255, 255))
 
         self.setScene(self.scene)
 
@@ -123,6 +126,7 @@ class TextView(QGraphicsView):
         self.adjustText()
         self.scene.setSceneRect(QRectF(self.viewport().rect()))
         self.centerText()
+        self.positionByline()
 
     def keyPressEvent(self, e):
 
@@ -272,7 +276,13 @@ class TextView(QGraphicsView):
                 slide = []
                 label = ''
                 for line in f:
-                    if '---[' in line:
+                    if '-author:' in line:
+                        self.author = line.partition(':')[2]
+                        self.author = self.author.rstrip('\n')
+                    elif '-copyright:' in line:
+                        self.copyright = line.partition(':')[2]
+                        self.copyright = self.copyright.rstrip('\n')
+                    elif '---[' in line:
                         start = len('---[')
                         end = line.find(']---')
                         label = line[start:end]
