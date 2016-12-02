@@ -75,6 +75,7 @@ class MainWindow(QMainWindow):
             strlist.append(str(item))
         self.fontSizeBox.addItems(strlist)
         self.fontSizeBox.setCurrentText("16")
+        self.fontSizeBox.currentTextChanged.connect(self.view.fontSize)
         self.toolbar.addWidget(self.fontSizeBox)
 
 
@@ -100,7 +101,7 @@ class TextView(QGraphicsView):
         self.fontRatio = 0.85/500.0 # The scaling ratio for the font.
         self.font.setBold(True)
         self.shadowSize = 5
-        self.shadowRatio = self.shadowSize/float(16)
+        self.shadowRatio = 0.5 * self.shadowSize/float(16)
         self.shadowOffset = 2
         self.shadowOffsetRatio = self.shadowOffset/float(16)
 
@@ -189,6 +190,12 @@ class TextView(QGraphicsView):
         self.adjustText()
         self.centerText()
 
+    def fontSize(self, size):
+
+        self.basicFontSize = int(size)
+        self.adjustText()
+        self.centerText()
+
 
     def drawBackground(self, qp, rect):
 
@@ -212,10 +219,9 @@ class TextView(QGraphicsView):
     def adjustText(self):
 
         fontSize = self.basicFontSize * self.fontRatio * self.viewport().width()
-        print(fontSize)
         self.font.setPointSizeF(fontSize)
         self.shadowSize = int(fontSize * self.shadowRatio)
-        self.shadowOffset = int(self.fontRatio * fontSize * self.shadowOffsetRatio)
+        self.shadowOffset = int(fontSize * self.shadowOffsetRatio)
         self.text.setFont(self.font)
 
         # Must do duck typing here because the object takes ownership
