@@ -4,9 +4,9 @@
 import sys
 from PyQt5.QtWidgets import (QApplication, QGraphicsView, QGraphicsScene, QGraphicsItem,
                              QGraphicsBlurEffect, QGraphicsOpacityEffect, QGraphicsDropShadowEffect,
-                             QGraphicsColorizeEffect, QMainWindow, QAction, QActionGroup)
+                             QMainWindow, QAction, QActionGroup, QFontComboBox, QComboBox)
 from PyQt5.QtCore import Qt, QRectF, QPointF
-from PyQt5.QtGui import QPixmap, QFont, QColor, QMatrix4x4, QIcon
+from PyQt5.QtGui import QPixmap, QFont, QColor, QMatrix4x4, QIcon, QFontDatabase
 
 class MainWindow(QMainWindow):
 
@@ -21,6 +21,8 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.view)
 
         self.toolbar = self.addToolBar('Text Effects')
+
+        # Set up the text effects tools
         actionGroup = QActionGroup(self)
 
         noneAction = QAction(QIcon("none.png"), "&Clear", self)
@@ -44,8 +46,39 @@ class MainWindow(QMainWindow):
         actionGroup.addAction(shadowAction)
 
         self.toolbar.addActions(actionGroup.actions())
+        self.toolbar.addSeparator()
 
-        self.setGeometry(300, 300, 300, 200)
+        # Set up the font selection tools
+        boldAction = QAction(QIcon("bold.png"), "&Bold", self)
+        boldAction.setStatusTip("Bold Text")
+        boldAction.setCheckable(True)
+        boldAction.setChecked(True)
+        boldAction.triggered[bool].connect(self.view.bold)
+        self.toolbar.addAction(boldAction)
+
+        italicAction = QAction(QIcon("italic.png"), "&Italic", self)
+        italicAction.setStatusTip("Italic Text")
+        italicAction.setCheckable(True)
+        italicAction.triggered[bool].connect(self.view.italic)
+        self.toolbar.addAction(italicAction)
+
+        self.fontBox = QFontComboBox(self)
+        self.fontBox.setCurrentFont(QFont("PT Sans", 16, QFont.Bold))
+        self.fontBox.currentFontChanged.connect(self.view.fontFamily)
+        self.toolbar.addWidget(self.fontBox)
+
+        self.fontSizeBox = QComboBox(self)
+        self.fontSizeBox.setEditable(True)
+        strlist = []
+        intlist = QFontDatabase.standardSizes()
+        for item in intlist:
+            strlist.append(str(item))
+        self.fontSizeBox.addItems(strlist)
+        self.fontSizeBox.setCurrentText("16")
+        self.toolbar.addWidget(self.fontSizeBox)
+
+
+        self.setGeometry(300, 300, 600, 500)
         self.setWindowTitle('Renderer')
         self.show()
 
@@ -132,6 +165,27 @@ class TextView(QGraphicsView):
     def noEffect(self):
 
         self.text.setGraphicsEffect(None)
+
+
+    def bold(self, enabled):
+
+        self.font.setBold(enabled)
+        self.adjustText()
+        self.centerText()
+
+
+    def italic(self, enabled):
+
+        self.font.setItalic(enabled)
+        self.adjustText()
+        self.centerText()
+
+    def fontFamily(self, font):
+
+        self.font.setFamily(font.family())
+        self.adjustText()
+        self.centerText()
+
 
     def drawBackground(self, qp, rect):
 
