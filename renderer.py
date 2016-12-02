@@ -235,16 +235,13 @@ class TextView(QGraphicsView):
 
     def centerText(self):
 
-        # The center of the text block
-        rect = self.text.boundingRect()
-        rectCenter = QPointF(rect.width()/2, rect.height()/2)
-
         # The center of the window
         windowWidth = self.viewport().width()
         windowHeight = self.viewport().height()
         centerPos = QPointF(float(windowWidth)/2, float(windowHeight)/2)
 
         # The desired new location
+        rect = self.text.boundingRect()
         topLeftPos = centerPos - QPointF(rect.width()/2, rect.height()/2)
 
         # Any position of the text relative to the scene
@@ -252,6 +249,19 @@ class TextView(QGraphicsView):
 
         # Move the text to the center position
         self.text.moveBy(topLeftPos.x()-rectS.x(), topLeftPos.y()-rectS.y())
+
+    def positionByline(self):
+
+        windowHeight = self.viewport().height()
+        rect = self.byline.boundingRect()
+
+        # The desired new location (must subtract original text height to correct for initial position)
+        topLeftHeight = windowHeight - float(rect.height())
+
+        # Any position of the text relative to the scene
+        rectS = self.byline.mapRectToScene(rect)
+
+        self.byline.moveBy(0, topLeftHeight - rectS.y())
 
     def readSong(self, filename):
 
