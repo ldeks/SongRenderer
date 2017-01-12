@@ -5,12 +5,21 @@ Rectangle {
     width: 1000
     height: 600
 
+    function setFont(font) {
+        songText.font = font
+    }
+
+    function getFont() {
+        return songText.font
+    }
+
     Image {
         source: "geo5.jpg"
         anchors.fill: parent
     }
 
     Text {
+        id: songText
         text: "Praise to the Lord\nthe Almighty\nThe King of Creation"
         anchors.centerIn: parent
         font.family: "The Girl Next Door"

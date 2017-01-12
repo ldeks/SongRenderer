@@ -4,9 +4,15 @@
 import sys
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QAction, QActionGroup,
                              QFontComboBox, QComboBox, QWidget, QVBoxLayout)
-from PyQt5.QtCore import Qt, QUrl
+from PyQt5.QtCore import Qt, QUrl, QObject, pyqtSignal
 from PyQt5.QtQuick import QQuickView
 from PyQt5.QtGui import QFontDatabase, QIcon, QFont
+
+#class Signals(QObject):
+#    lineRead = pyqtSignal(str)
+#    clearEditor = pyqtSignal()
+#    fileLoadFinished = pyqtSignal()
+#    setFont = pyqtSignal(QFont)
 
 class MainWindow(QMainWindow):
 
@@ -17,10 +23,11 @@ class MainWindow(QMainWindow):
 
     def initUI(self):
 
+        # View widget stuff
+
         self.view = TextView()
         self.centralWidget = QWidget(self)
         self.layout = QVBoxLayout(self.centralWidget)
-
         self.view.statusChanged.connect(self.quickViewStatusChanged)
         self.view.sceneGraphError.connect(self.sceneGraphError)
 
@@ -31,6 +38,8 @@ class MainWindow(QMainWindow):
 
         self.setCentralWidget(self.centralWidget)
         self.statusBar().showMessage('Ready')
+
+        # Menu stuff
 
         self.toolbar = self.addToolBar('Text Effects')
 
@@ -64,19 +73,19 @@ class MainWindow(QMainWindow):
         boldAction = QAction(QIcon("bold.png"), "&Bold", self)
         boldAction.setStatusTip("Bold Text")
         boldAction.setCheckable(True)
-        boldAction.setChecked(True)
-        #boldAction.triggered[bool].connect(self.view.bold)
+        boldAction.setChecked(False)
+        boldAction.triggered[bool].connect(self.view.bold)
         self.toolbar.addAction(boldAction)
 
         italicAction = QAction(QIcon("italic.png"), "&Italic", self)
         italicAction.setStatusTip("Italic Text")
         italicAction.setCheckable(True)
-        #italicAction.triggered[bool].connect(self.view.italic)
+        italicAction.triggered[bool].connect(self.view.italic)
         self.toolbar.addAction(italicAction)
 
         self.fontBox = QFontComboBox(self)
-        self.fontBox.setCurrentFont(QFont("PT Sans", 16, QFont.Bold))
-        #self.fontBox.currentFontChanged.connect(self.view.fontFamily)
+        self.fontBox.setCurrentFont(self.view.font)
+        self.fontBox.currentFontChanged.connect(self.view.fontFamily)
         self.toolbar.addWidget(self.fontBox)
 
         self.fontSizeBox = QComboBox(self)
@@ -86,8 +95,8 @@ class MainWindow(QMainWindow):
         for item in intlist:
             strlist.append(str(item))
         self.fontSizeBox.addItems(strlist)
-        self.fontSizeBox.setCurrentText("16")
-        #self.fontSizeBox.currentTextChanged.connect(self.view.fontSize)
+        self.fontSizeBox.setCurrentText(str(self.view.font.pointSize()))
+        self.fontSizeBox.currentTextChanged.connect(self.view.fontSize)
         self.toolbar.addWidget(self.fontSizeBox)
 
         self.setGeometry(300, 300, 600, 500)
@@ -118,7 +127,30 @@ class TextView(QQuickView):
     def initUI(self):
         self.setResizeMode(QQuickView.SizeRootObjectToView)
         self.setSource(QUrl("screen.qml"))
+        self.font = self.rootObject().getFont()
+        self.basicFontSize = self.font.pointSize
+        self.fontRatio = 0.85/500.0 # The scaling ratio for the font.
 
+    def bold(self, enabled):
+        self.font.setBold(enabled)
+        self.rootObject().setFont(self.font)
+
+    def italic(self, enabled):
+        self.font.setItalic(enabled)
+        self.rootObject().setFont(self.font)
+
+    def fontFamily(self, font):
+        self.font.setFamily(font.family())
+        self.rootObject().setFont(self.font)
+
+    def fontSize(self, size):
+        self.basicFontSize = int(size)
+        self.adjustText()
+        self.rootObject().setFont(self.font)
+
+    def adjustText(self):
+        fontSize = self.basicFontSize * self.fontRatio * self.width()
+        self.font.setPointSizeF(fontSize)
 
     def readSong(self, filename):
 
