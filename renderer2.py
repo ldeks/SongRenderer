@@ -48,22 +48,22 @@ class MainWindow(QMainWindow):
 
         noneAction = QAction(QIcon("none.png"), "&Clear", self)
         noneAction.setStatusTip("Clear Effects")
-        #noneAction.triggered.connect(self.view.noEffect)
+        noneAction.triggered.connect(self.view.noEffect)
         actionGroup.addAction(noneAction)
 
         blurAction = QAction(QIcon("blur.png"), "&Blur", self)
         blurAction.setStatusTip("Blur Text")
-        #blurAction.triggered.connect(self.view.blur)
+        blurAction.triggered.connect(self.view.blur)
         actionGroup.addAction(blurAction)
 
         opacityAction = QAction(QIcon("opacity.png"), "&Transparency", self)
         opacityAction.setStatusTip("Fade Text")
-        #opacityAction.triggered.connect(self.view.opacity)
+        opacityAction.triggered.connect(self.view.opacity)
         actionGroup.addAction(opacityAction)
 
         shadowAction = QAction(QIcon("shadow.png"), "&Drop Shadow", self)
         shadowAction.setStatusTip("Drop-shadow Text")
-        #shadowAction.triggered.connect(self.view.shadow)
+        shadowAction.triggered.connect(self.view.shadow)
         actionGroup.addAction(shadowAction)
 
         self.toolbar.addActions(actionGroup.actions())
@@ -95,7 +95,8 @@ class MainWindow(QMainWindow):
         for item in intlist:
             strlist.append(str(item))
         self.fontSizeBox.addItems(strlist)
-        self.fontSizeBox.setCurrentText(str(self.view.font.pointSize()))
+        self.view.fontSize('24')
+        self.fontSizeBox.setCurrentText(str(self.view.basicFontSize))
         self.fontSizeBox.currentTextChanged.connect(self.view.fontSize)
         self.toolbar.addWidget(self.fontSizeBox)
 
@@ -144,13 +145,28 @@ class TextView(QQuickView):
         self.rootObject().setFont(self.font)
 
     def fontSize(self, size):
-        self.basicFontSize = int(size)
+        if size.isnumeric() and (int(size) > 0):
+            self.basicFontSize = int(size)
         self.adjustText()
-        self.rootObject().setFont(self.font)
 
     def adjustText(self):
         fontSize = self.basicFontSize * self.fontRatio * self.width()
         self.font.setPointSizeF(fontSize)
+        self.rootObject().setFont(self.font)
+
+    def opacity(self):
+        self.rootObject().setTextOpacity(0.5)
+
+    def noEffect(self):
+        self.rootObject().setTextOpacity(1.0)
+        self.rootObject().setTextBlur(False)
+        self.rootObject().setDropShadow(False)
+
+    def blur(self):
+        self.rootObject().setTextBlur(True)
+
+    def shadow(self):
+        self.rootObject().setDropShadow(True)
 
     def readSong(self, filename):
 
